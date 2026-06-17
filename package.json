@@ -1,0 +1,12 @@
+{
+  "name": "fund-reports",
+  "version": "1.0.0",
+  "private": true,
+  "description": "投資信託の運用状況を SlidePack で PPTX レポート化する",
+  "scripts": {
+    "start": "node reports.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

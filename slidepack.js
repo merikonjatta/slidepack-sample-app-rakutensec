@@ -1,9 +1,9 @@
 // SlidePack API の 4 ステップ（セッション作成 → S3 アップロード → レンダリング →
 // ダウンロード）。zip は呼び出し側が用意する。
 
-const fs = require("node:fs/promises");
+let fs = require("node:fs/promises");
 
-const BASE = process.env.SLIDEPACK_HOST || "https://slidepack.io";
+let BASE = process.env.SLIDEPACK_HOST || "https://slidepack.io";
 
 function auth(apiKey) {
   return { Authorization: `Bearer ${apiKey}` };
@@ -11,23 +11,23 @@ function auth(apiKey) {
 
 // 1. セッション作成。既存の未レンダーセッションは破棄される（アカウントに 1 つ）。
 async function createSession(apiKey) {
-  const res = await fetch(`${BASE}/sessions`, {
+  let res = await fetch(`${BASE}/sessions`, {
     method: "POST",
     headers: auth(apiKey),
   });
   if (!res.ok) throw new Error(`session create failed: HTTP ${res.status}`);
-  const { session, upload } = await res.json();
+  let { session, upload } = await res.json();
   return { uuid: session.uuid, upload };
 }
 
 // 2. zip を S3 へアップロード。params を順番どおりに入れ、file を最後に付ける。
 async function uploadZip(upload, zipPath) {
-  const form = new FormData();
-  for (const [k, v] of Object.entries(upload.params)) form.append(k, v);
-  const bytes = await fs.readFile(zipPath);
+  let form = new FormData();
+  for (let [k, v] of Object.entries(upload.params)) form.append(k, v);
+  let bytes = await fs.readFile(zipPath);
   form.append("file", new Blob([bytes]), "input.zip");
 
-  const res = await fetch(upload.action, { method: "POST", body: form });
+  let res = await fetch(upload.action, { method: "POST", body: form });
   if (res.status !== 204) {
     throw new Error(`upload failed: HTTP ${res.status}`);
   }
@@ -35,12 +35,12 @@ async function uploadZip(upload, zipPath) {
 
 // 3. レンダリング。失敗でも HTTP 200 が返るため body を確認する。
 async function render(uuid, apiKey) {
-  const res = await fetch(`${BASE}/sessions/${uuid}/render`, {
+  let res = await fetch(`${BASE}/sessions/${uuid}/render`, {
     method: "POST",
     headers: auth(apiKey),
   });
   if (!res.ok) throw new Error(`render request failed: HTTP ${res.status}`);
-  const body = await res.json();
+  let body = await res.json();
   if (!body.session.render_succeeded) {
     throw new Error(`render failed: ${body.session.render_message || "unknown error"}`);
   }
@@ -49,16 +49,16 @@ async function render(uuid, apiKey) {
 
 // 4. 生成 PPTX をダウンロードして保存する。
 async function download(url, destPath) {
-  const res = await fetch(url);
+  let res = await fetch(url);
   if (!res.ok) throw new Error(`download failed: HTTP ${res.status}`);
   await fs.writeFile(destPath, Buffer.from(await res.arrayBuffer()));
 }
 
 // zip を 1 件レンダリングし PPTX を保存する（セッションは毎回新規）。
 async function renderZipToFile(apiKey, zipPath, destPath) {
-  const session = await createSession(apiKey);
+  let session = await createSession(apiKey);
   await uploadZip(session.upload, zipPath);
-  const result = await render(session.uuid, apiKey);
+  let result = await render(session.uuid, apiKey);
   await download(result.download_url, destPath);
 }
 

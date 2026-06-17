@@ -1,44 +1,44 @@
 // 全ファンドを順番に処理し、運用レポート PPTX を out/ に出力する。
 // ファンドごとに独立処理し、1 件失敗しても残りは続行、いずれか失敗時は非ゼロ終了。
 
-const fsp = require("node:fs/promises");
-const os = require("node:os");
-const path = require("node:path");
-const { execFile } = require("node:child_process");
-const { promisify } = require("node:util");
+let fsp = require("node:fs/promises");
+let os = require("node:os");
+let path = require("node:path");
+let { execFile } = require("node:child_process");
+let { promisify } = require("node:util");
 
-const { scrapeFund } = require("./scrape");
-const { buildData } = require("./transform");
-const { renderZipToFile } = require("./slidepack");
+let { scrapeFund } = require("./scrape");
+let { buildData } = require("./transform");
+let { renderZipToFile } = require("./slidepack");
 
-const pexec = promisify(execFile);
-const OUT_DIR = path.join(__dirname, "out");
-const TEMPLATE = path.join(__dirname, "template.pptx");
-const IDS = require("./ids.json");
+let pexec = promisify(execFile);
+let OUT_DIR = path.join(__dirname, "out");
+let TEMPLATE = path.join(__dirname, "template.pptx");
+let IDS_FILE = path.join(__dirname, "ids.txt");
 
 function isoDate(ms) {
-  const d = new Date(ms);
-  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const dd = String(d.getUTCDate()).padStart(2, "0");
+  let d = new Date(ms);
+  let mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+  let dd = String(d.getUTCDate()).padStart(2, "0");
   return `${d.getUTCFullYear()}-${mm}-${dd}`;
 }
 
 // template.pptx と data.json を zip ルートに収める（-j でパスを捨て basename のみ）。
 async function makeZip(workDir, data) {
-  const dataPath = path.join(workDir, "data.json");
+  let dataPath = path.join(workDir, "data.json");
   await fsp.writeFile(dataPath, JSON.stringify(data));
-  const zipPath = path.join(workDir, "input.zip");
+  let zipPath = path.join(workDir, "input.zip");
   await pexec("zip", ["-j", "-q", zipPath, TEMPLATE, dataPath]);
   return zipPath;
 }
 
 async function processFund(id, apiKey) {
-  const fund = await scrapeFund(id);
-  const data = buildData(fund);
-  const workDir = await fsp.mkdtemp(path.join(os.tmpdir(), "fund-"));
+  let fund = await scrapeFund(id);
+  let data = buildData(fund);
+  let workDir = await fsp.mkdtemp(path.join(os.tmpdir(), "fund-"));
   try {
-    const zipPath = await makeZip(workDir, data);
-    const outPath = path.join(OUT_DIR, `${id}-${isoDate(fund.asOfMs)}.pptx`);
+    let zipPath = await makeZip(workDir, data);
+    let outPath = path.join(OUT_DIR, `${id}-${isoDate(fund.asOfMs)}.pptx`);
     await renderZipToFile(apiKey, zipPath, outPath);
     return outPath;
   } finally {
@@ -46,25 +46,28 @@ async function processFund(id, apiKey) {
   }
 }
 
-// `--id=<ID>` 指定時はそのファンドだけ処理する（既定は ids.json の全件）。
-function targetIds() {
-  const arg = process.argv.find((a) => a.startsWith("--id="));
-  return arg ? [arg.slice("--id=".length)] : IDS;
+// `--id=<ID>` 指定時はそのファンドだけ処理する。
+// 既定は ids.txt の全件（1 行 1 ID、空行は無視）。--id 指定時は ids.txt を読まない。
+async function targetIds() {
+  let arg = process.argv.find((a) => a.startsWith("--id="));
+  if (arg) return [arg.slice("--id=".length)];
+  let text = await fsp.readFile(IDS_FILE, "utf8");
+  return text.split("\n").map((line) => line.trim()).filter(Boolean);
 }
 
 async function main() {
-  const apiKey = process.env.SLIDEPACK_API_KEY;
+  let apiKey = process.env.SLIDEPACK_API_KEY;
   if (!apiKey) {
     console.error("SLIDEPACK_API_KEY is not set");
     process.exit(1);
   }
   await fsp.mkdir(OUT_DIR, { recursive: true });
 
-  const ids = targetIds();
+  let ids = await targetIds();
   let failed = 0;
-  for (const id of ids) {
+  for (let id of ids) {
     try {
-      const out = await processFund(id, apiKey);
+      let out = await processFund(id, apiKey);
       console.log(`✓ ${id} → ${path.relative(__dirname, out)}`);
     } catch (e) {
       failed++;

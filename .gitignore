@@ -1,4 +1,5 @@
-ids.json
+mise.local.toml
+ids.txt
 out/
 node_modules/
 ~$*

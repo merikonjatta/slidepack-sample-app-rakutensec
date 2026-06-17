@@ -3,7 +3,7 @@
 `PLAN.md` を唯一の仕様源とする詳細設計。PDF・`mupdf`・`defs.json` は対象外
 （旧設計の名残で削除済み）。
 
-## データ取得（`ids.json` の ISIN ごと）
+## データ取得（`ids.txt` の ISIN ごと）
 
 - `https://www.rakuten-sec.co.jp/web/fund/detail/?ID=<ID>` を Node 18+ 組み込みの
   `fetch` で取得。ページは UTF-8、ヘッダ不要のベア GET。
@@ -38,7 +38,7 @@
 
 ## パイプライン（`node reports.js`）
 
-- 既定は `ids.json` の全件。`--id=<ID>` 指定時はそのファンドだけ処理する（開発・確認用）。
+- 既定は `ids.txt` の全件（1 行 1 ID）。`--id=<ID>` 指定時はそのファンドだけ処理する（開発・確認用）。
 - ファンドを**逐次**処理（`PLAN.md` の「順番に」、かつ SlidePack の
   「アカウントあたり未レンダーセッションは 1 つ」制約による）。
 - ファンドごと: スクレイプ → `data.json` 生成 → `template.pptx` と `zip`（シェルの

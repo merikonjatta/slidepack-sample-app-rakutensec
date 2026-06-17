@@ -1,4 +1,4 @@
-# fund-reports
+# slidepack-sample-app-rakutensec
 
 楽天証券のファンド詳細ページをスクレイプし、[SlidePack](https://slidepack.io) で
 運用レポート PPTX を生成する Node.js スクリプト
@@ -6,6 +6,7 @@
 SlidePack SkillをClaudeに与え、
 - PLAN.md （指示書）
 - pre-template.pptx （出力イメージファイル）
+- 
 から作らせた。
 
 ## 必要なもの

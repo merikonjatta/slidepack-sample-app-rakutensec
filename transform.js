@@ -59,18 +59,34 @@ function chartSlide(fund, win) {
     series[`s${i++}`] = { name, values: timestamps.map((ts) => byTs.get(ts)) };
   }
 
-  return {
-    template: 2,
-    chart_title: `基準価額（${win.label}）`,
-    nav_chart: {
-      type: "chart",
-      date_labels: timestamps.map(toSerial),
-      date_labels_format: "yyyy/mm",
-      date_labels_major_time_unit: win.unit,
-      date_labels_major_unit: win.major,
-      axis1: { format: "#,##0", series },
-    },
+  const nav_chart = {
+    type: "chart",
+    date_labels: timestamps.map(toSerial),
+    date_labels_format: "yyyy/mm",
+    date_labels_major_time_unit: win.unit,
+    date_labels_major_unit: win.major,
+    axis1: { format: "#,##0", series },
   };
+
+  // 純資産（億円）は桁が異なるため第 2 軸に。NAV と同一タイムスタンプで整列する。
+  // 面グラフは基線から塗られるため最小値を 0 に固定する。
+  if (fund.netAssets) {
+    const byTs = new Map(fund.netAssets.map(([ts, v]) => [ts, v]));
+    nav_chart.axis2 = {
+      format: "#,##0",
+      bounds: { minimum: 0 },
+      series: {
+        na: {
+          name: "純資産（億円）",
+          values: timestamps.map((ts) => byTs.get(ts)),
+          // 系列の上書きで塗りが失われるため明示する（NAV 折れ線は accent1/2）。
+          styles: { shape: { fill: "accent6" } },
+        },
+      },
+    };
+  }
+
+  return { template: 2, chart_title: `基準価額（${win.label}）`, nav_chart };
 }
 
 // 数値セル: マイナスは reddish(accent4)、プラスは dark gray(dk1)。テーマ定義色のみ使用。

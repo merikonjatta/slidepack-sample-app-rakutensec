@@ -8,6 +8,9 @@ const DETAIL_URL = (id) => `https://www.rakuten-sec.co.jp/web/fund/detail/?ID=${
 // どちらも円単位で同一スケール（分配金なしファンドでは一致＝1 本に見える）。
 const CHART_SERIES = ["基準価額", "基準価額+分配金"];
 
+// 純資産（億円）。NAV とは桁が異なるためチャートの第 2 軸に乗せる。
+const NET_ASSETS_SERIES = "純資産";
+
 // パフォーマンステーブルから抜き出す行ラベル（完全一致）。
 // 半角/全角括弧の混在はページ表記そのまま。楽天証券分類平均・期間の行と区別するため完全一致。
 const STAT_ROWS = ["リターン(年率）", "リスク(年率）", "シャープレシオ（ＳＲ）"];
@@ -92,6 +95,9 @@ async function scrapeFund(id) {
     throw new Error(`基準価額 series not found for ${id}`);
   }
 
+  // 純資産は存在すれば第 2 軸に出す（必須ではない）。
+  const netAssets = extractSeries(html, NET_ASSETS_SERIES);
+
   const perf = extractPerfTable(html);
   const stats = {};
   for (const label of STAT_ROWS) {
@@ -105,7 +111,7 @@ async function scrapeFund(id) {
   // 基準日 = 基準価額系列の最終データ点の日付。
   const asOfMs = series["基準価額"].at(-1)[0];
 
-  return { id, name, asOfMs, series, stats };
+  return { id, name, asOfMs, series, netAssets, stats };
 }
 
 module.exports = { scrapeFund };

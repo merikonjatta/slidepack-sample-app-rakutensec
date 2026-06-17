@@ -46,6 +46,12 @@ async function processFund(id, apiKey) {
   }
 }
 
+// `--id=<ID>` 指定時はそのファンドだけ処理する（既定は ids.json の全件）。
+function targetIds() {
+  const arg = process.argv.find((a) => a.startsWith("--id="));
+  return arg ? [arg.slice("--id=".length)] : IDS;
+}
+
 async function main() {
   const apiKey = process.env.SLIDEPACK_API_KEY;
   if (!apiKey) {
@@ -54,8 +60,9 @@ async function main() {
   }
   await fsp.mkdir(OUT_DIR, { recursive: true });
 
+  const ids = targetIds();
   let failed = 0;
-  for (const id of IDS) {
+  for (const id of ids) {
     try {
       const out = await processFund(id, apiKey);
       console.log(`✓ ${id} → ${path.relative(__dirname, out)}`);
@@ -64,7 +71,7 @@ async function main() {
       console.error(`✗ ${id}: ${e.message}`);
     }
   }
-  console.log(`\n${IDS.length - failed}/${IDS.length} succeeded`);
+  console.log(`\n${ids.length - failed}/${ids.length} succeeded`);
   process.exit(failed ? 1 : 0);
 }
 

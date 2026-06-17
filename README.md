@@ -6,7 +6,7 @@
 SlidePack SkillをClaudeに与え、
 - PLAN.md （指示書）
 - pre-template.pptx （出力イメージファイル）
-- 
+
 から作らせた。
 
 ## 必要なもの

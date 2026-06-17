@@ -9,6 +9,15 @@ SlidePack SkillをClaudeに与え、
 
 から作らせた。
 
+最初に与えたイメージpptx:
+
+<img width="370" height="610" alt="image" src="https://github.com/user-attachments/assets/b377c6d6-6649-4828-9d47-eee2c4e63869" />
+
+出力結果:
+
+<img width="336" height="914" alt="image" src="https://github.com/user-attachments/assets/541def16-70c3-424a-bbbb-11796b61d93b" />
+
+
 ## 必要なもの
 
 - Node.js 18 以上
